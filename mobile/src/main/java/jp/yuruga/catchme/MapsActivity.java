@@ -5,6 +5,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -13,7 +14,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import jp.yuruga.catchme.event.RoomEventDispatcher;
+import jp.yuruga.catchme.event.RoomEventListenerInterface;
+
 public class MapsActivity extends FragmentActivity {
+
+    private static final String TAG = MapsActivity.class.getSimpleName();
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     public double latitude = 0;
@@ -24,6 +30,7 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        setUpRoomEvent();
     }
 
     @Override
@@ -116,5 +123,37 @@ public class MapsActivity extends FragmentActivity {
 
         //Google Mapの Zoom値を指定
         mMap.animateCamera(CameraUpdateFactory.zoomTo(20));
+    }
+
+    private void setUpRoomEvent() {
+
+        Log.d(TAG, "@@@setUpRoomEvent@@@");
+
+        RoomEventDispatcher.addEventListener(new RoomEventListenerInterface() {
+            @Override
+            public void onChangeProp() {
+                Log.d(TAG, "@@@CHANGE111@@@");
+            }
+
+            @Override
+            public void onReceiveMessage() {
+                Log.d(TAG, "@@@RECEIVE111@@@");
+            }
+        });
+
+        RoomEventDispatcher.addEventListener(new RoomEventListenerInterface() {
+            @Override
+            public void onChangeProp() {
+                Log.d(TAG, "@@@CHANGE222@@@");
+            }
+
+            @Override
+            public void onReceiveMessage() {
+                Log.d(TAG, "@@@RECEIVE222@@@");
+            }
+        });
+
+        RoomEventDispatcher.dispatchChangeProp();
+        RoomEventDispatcher.dispatchReceiveMessage();
     }
 }
