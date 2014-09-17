@@ -8,12 +8,27 @@ import java.util.EventListener;
 public interface RoomEventListenerInterface extends EventListener {
 
     /**
+     * ルームに接続された時通知
+     */
+    public void onConnect(Object obj);
+
+    /**
+     * ルームから切断した時通知
+     */
+    public void onDisconnect();
+
+    /**
      * ルームプロパティが更新された時通知
      */
-    public void onChangeProp();
+    public void onChangeRoomProp(Object obj);
+
+    /**
+     * ユーザプロパティが更新された時通知
+     */
+    public void onChangeUserProp(Object[] arr);
 
     /**
      * メッセージが配信された時通知
      */
-    public void onReceiveMessage();
+    public void onReceiveMessage(String message);
 }

@@ -131,29 +131,33 @@ public class MapsActivity extends FragmentActivity {
 
         RoomEventDispatcher.addEventListener(new RoomEventListenerInterface() {
             @Override
-            public void onChangeProp() {
-                Log.d(TAG, "@@@CHANGE111@@@");
+            public void onConnect(Object obj) {
+                Log.d(TAG, "@@onConnect");
             }
 
             @Override
-            public void onReceiveMessage() {
-                Log.d(TAG, "@@@RECEIVE111@@@");
+            public void onDisconnect() {
+                Log.d(TAG, "@@onDisconnect");
+            }
+
+            @Override
+            public void onChangeRoomProp(Object obj) {
+                Log.d(TAG, "@@onChangeRoomProp");
+            }
+
+            @Override
+            public void onChangeUserProp(Object[] arr) {
+                Log.d(TAG, "@@onChangeUserProp");
+            }
+
+            @Override
+            public void onReceiveMessage(String message) {
+                Log.d(TAG, "@@onReceiveMessage");
             }
         });
 
-        RoomEventDispatcher.addEventListener(new RoomEventListenerInterface() {
-            @Override
-            public void onChangeProp() {
-                Log.d(TAG, "@@@CHANGE222@@@");
-            }
-
-            @Override
-            public void onReceiveMessage() {
-                Log.d(TAG, "@@@RECEIVE222@@@");
-            }
-        });
-
-        RoomEventDispatcher.dispatchChangeProp();
-        RoomEventDispatcher.dispatchReceiveMessage();
+        RoomEventDispatcher.dispatchConnect(new Object());
+        RoomEventDispatcher.dispatchReceiveMessage("test");
+        RoomEventDispatcher.dispatchDisconnect();
     }
 }

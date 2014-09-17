@@ -25,7 +25,7 @@ public class RoomEventDispatcher {
      * コンストラクタ
      */
     private RoomEventDispatcher() {
-        //未使用
+        //TODO: socketアダプタ
     }
 
     /**
@@ -47,12 +47,46 @@ public class RoomEventDispatcher {
     }
 
     /**
-     * プロパティ更新通知
+     * 接続通知
      */
-    public static void dispatchChangeProp() {
+    public static void dispatchConnect(Object obj) {
         for(RoomEventListenerInterface listener : _listener){
             if(listener != null){
-                listener.onChangeProp();
+                listener.onConnect(obj);
+            }
+        }
+    }
+
+    /**
+     * 切断通知
+     */
+    public static void dispatchDisconnect() {
+        for(RoomEventListenerInterface listener : _listener){
+            if(listener != null){
+                listener.onDisconnect();
+            }
+        }
+    }
+
+    /**
+     * ルームプロパティ更新通知
+     */
+    public static void dispatchChangeRoomProp(Object obj) {
+        for(RoomEventListenerInterface listener : _listener){
+            if(listener != null){
+                listener.onChangeRoomProp(obj);
+            }
+        }
+    }
+
+
+    /**
+     * ユーザプロパティ更新通知
+     */
+    public static void dispatchChangeUserProp(Object[] arr) {
+        for(RoomEventListenerInterface listener : _listener){
+            if(listener != null){
+                listener.onChangeUserProp(arr);
             }
         }
     }
@@ -60,10 +94,10 @@ public class RoomEventDispatcher {
     /**
      * メッセージ通知
      */
-    public static void dispatchReceiveMessage() {
+    public static void dispatchReceiveMessage(String message) {
         for(RoomEventListenerInterface listener : _listener){
             if(listener != null){
-                listener.onReceiveMessage();
+                listener.onReceiveMessage(message);
             }
         }
     }
