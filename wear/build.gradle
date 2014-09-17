@@ -23,6 +23,13 @@ android {
             storeFile file("../debug.keystore")
         }
     }
+    sourceSets {
+        main {
+            java {
+                srcDirs = ["src/main/java", "../common/src/java"]
+            }
+        }
+    }
 }
 
 dependencies {
