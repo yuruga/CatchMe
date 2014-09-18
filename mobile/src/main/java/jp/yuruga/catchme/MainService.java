@@ -2,15 +2,28 @@ package jp.yuruga.catchme;
 
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.IBinder;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.data.FreezableUtils;
+import com.google.android.gms.wearable.Asset;
+import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 import jp.yuruga.catchme.event.RoomEventDispatcher;
 import jp.yuruga.catchme.event.RoomEventListenerInterface;
@@ -61,7 +74,14 @@ public class MainService extends WearableListenerService implements RoomEventLis
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
-        super.onDataChanged(dataEvents);
+        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
+        dataEvents.close();
+        for (DataEvent event : events) {
+            if (event.getType() == DataEvent.TYPE_CHANGED) {
+                String path = event.getDataItem().getUri().getPath();
+                //TODO: manage data change
+            }
+        }
     }
 
 
@@ -90,5 +110,34 @@ public class MainService extends WearableListenerService implements RoomEventLis
     @Override
     public void onReceiveMessage(String message) {
         Log.d(TAG, "@@onReceiveMessage");
+    }
+
+
+    private void sendMessage(String path, byte[] data) {
+        Collection<String> nodes = getNodes();
+        for (String node : nodes) {
+            Wearable.MessageApi.sendMessage(
+                    mGoogleApiClient, node, path, data).setResultCallback(
+                    new ResultCallback<MessageApi.SendMessageResult>() {
+                        @Override
+                        public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                            if (!sendMessageResult.getStatus().isSuccess()) {
+                                Log.e(TAG, "Failed to send message with status code: "
+                                        + sendMessageResult.getStatus().getStatusCode());
+                            }
+                        }
+                    }
+            );
+        }
+    }
+
+    private Collection<String> getNodes() {
+        HashSet<String> results= new HashSet<String>();
+        NodeApi.GetConnectedNodesResult nodes =
+                Wearable.NodeApi.getConnectedNodes(mGoogleApiClient).await();
+        for (Node node : nodes.getNodes()) {
+            results.add(node.getId());
+        }
+        return results;
     }
 }
