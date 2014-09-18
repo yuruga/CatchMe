@@ -7,6 +7,7 @@ import java.util.EventListener;
  */
 public interface RoomEventListenerInterface extends EventListener {
 
+
     /**
      * ルームに接続された時通知
      */
