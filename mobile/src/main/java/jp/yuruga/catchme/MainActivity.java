@@ -38,12 +38,25 @@ public class MainActivity extends Activity {
 
     public void onStartGameClicked(View view)
     {
-        startMainService();
+        startGame();
     }
 
-    private void startMainService()
+    public void onStopGameClicked(View view)
+    {
+        stopGame();
+    }
+
+    private void startGame()
     {
         Intent i = new Intent(this, MainService.class);
+        i.setAction(MainService.ACTION_START_GAME);
+        this.startService(i);
+    }
+
+    private void stopGame()
+    {
+        Intent i = new Intent(this, MainService.class);
+        i.setAction(MainService.ACTION_STOP_GAME);
         this.startService(i);
     }
 }
