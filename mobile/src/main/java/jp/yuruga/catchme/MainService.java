@@ -1,11 +1,8 @@
 package jp.yuruga.catchme;
 
-import android.app.Service;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -24,7 +21,6 @@ import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 
-import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -67,6 +63,9 @@ public class MainService extends WearableListenerService
         super.onCreate();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
                 .build();
         mGoogleApiClient.connect();
 
@@ -109,6 +108,7 @@ public class MainService extends WearableListenerService
 
     private void startListeningLocationUpdates()
     {
+        log("%%StartListening%%");
         if(mGoogleApiClient.isConnected())
         {
             mLocationRequest = LocationRequest.create();
@@ -117,6 +117,7 @@ public class MainService extends WearableListenerService
             mLocationRequest.setInterval(mLocationRequestInterval);
             mLocationRequest.setFastestInterval(mLocationRequestFastestInterval);
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            log("%%StartListening2222%%");
         }
 
     }
@@ -196,6 +197,7 @@ public class MainService extends WearableListenerService
 
     @Override
     public void onConnected(Bundle bundle) {
+        log("%%google api client connected%%");
         if(isListeningLocation)
         {
             startListeningLocationUpdates();
