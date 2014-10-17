@@ -1,9 +1,10 @@
 package jp.yuruga.catchme;
 
-import android.app.Service;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.location.Location;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -14,9 +15,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.data.FreezableUtils;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
@@ -28,6 +29,7 @@ import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
+import com.google.android.gms.wearable.WearableListenerService;
 
 import java.util.Collection;
 import java.util.Date;
@@ -37,88 +39,64 @@ import java.util.List;
 import jp.yuruga.catchme.event.RoomEventDispatcher;
 import jp.yuruga.catchme.event.RoomEventListenerInterface;
 
-import static jp.yuruga.common.Constants.KEY_META;
-import static jp.yuruga.common.Constants.PATH_GAME_DATA;
-import static jp.yuruga.common.Share.log;
+import static jp.yuruga.common.Constants.*;
+import static jp.yuruga.common.Share.*;
 
-public class MainService extends Service implements RoomEventListenerInterface,
+public class GameListenerService extends WearableListenerService
+        implements //RoomEventListenerInterface,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        LocationListener
+        GoogleApiClient.OnConnectionFailedListener//,
+        //LocationListener
 {
 
     private static final String TAG = GameListenerService.class.getSimpleName();
-    public static final String ACTION_START_WATCHING_LOCATION = "jp.yuruga.catcheme.action.START_WATCHING_LOCATION";
-    public static final String ACTION_TEST_ACTION = "jp.yuruga.catcheme.action.ACTION_TEST_0";
-    public static final String ACTION_START_GAME = "jp.yuruga.catcheme.action.START_GAME";
-    public static final String ACTION_STOP_GAME = "jp.yuruga.catchme.action.STOP_GAME";
 
-    //test action
-    //public static final String ACTION_TEST_0 = "jp.yuruga.catchme.action.TEST_0";
 
 
     private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
+    /*private LocationRequest mLocationRequest;
     private long mLocationRequestInterval;
     private long mLocationRequestFastestInterval;
-    private boolean isListeningLocation;
+    private boolean isListeningLocation;*/
 
-    /*public class MainServiceLocalBinder extends Binder {
-        MainService getService() {
-            // Return this instance of LocalService so clients can call public methods
-            return MainService.this;
+    //private MainService mMainService;
+    //private boolean mIsBound;
+
+    /*private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+
+            // サービスとの接続確立時に呼び出される
+            Toast.makeText(GameListenerService.this, "Activity:onServiceConnected",
+                    Toast.LENGTH_SHORT).show();
+
+            // サービスにはIBinder経由で#getService()してダイレクトにアクセス可能
+            mMainService = ((MainService.MainServiceLocalBinder)service).getService();
+
+            //必要であればmBoundServiceを使ってバインドしたサービスへの制御を行う
         }
-    }*/
 
-    //Binderの生成
-    //private final IBinder mBinder = new MainServiceLocalBinder();
-
-    /*@Override
-    public IBinder onBind(Intent intent) {
-        Toast.makeText(this, "MyService#onBind"+ ": " + intent, Toast.LENGTH_SHORT).show();
-        String action = intent.getAction();
-        if(ACTION_START_WATCHING_LOCATION.equals(action))
-        {
-            startListeningLocationUpdates();
-        }else if(ACTION_TEST_ACTION.equals(action))
-        {
-            testAction0();
+        public void onServiceDisconnected(ComponentName className) {
+            // サービスとの切断(異常系処理)
+            // プロセスのクラッシュなど意図しないサービスの切断が発生した場合に呼ばれる。
+            mMainService = null;
+            Toast.makeText(GameListenerService.this, "onServiceDisconnected",
+                    Toast.LENGTH_SHORT).show();
         }
-        log("onBind" + ": " + intent + "with action"+action);
+    };*/
 
-        return mBinder;
-    }*/
-
-    /*@Override
-    public void onRebind(Intent intent){
-        Toast.makeText(this, "MyService#onRebind"+ ": " + intent, Toast.LENGTH_SHORT).show();
-        log("onRebind" + ": " + intent);
+    public GameListenerService() {
     }
-
-    @Override
-    public boolean onUnbind(Intent intent){
-        Toast.makeText(this, "MyService#onUnbind"+ ": " + intent, Toast.LENGTH_SHORT).show();
-        log("onUnbind" + ": " + intent);
-
-        //onUnbindをreturn trueでoverrideすると次回バインド時にonRebildが呼ばれる
-        return true;
-    }
-
-    public MainService() {
-    }*/
-
-
 
     @Override
     public void onCreate() {
 
-        mLocationRequestInterval = (long)(getResources().getInteger(R.integer.location_update_interval_s)*1000);
-        mLocationRequestFastestInterval = (long)(getResources().getInteger(R.integer.location_update_fastest_interval_s)*1000);
+        /*mLocationRequestInterval = (long)(getResources().getInteger(R.integer.location_update_interval_s)*1000);
+        mLocationRequestFastestInterval = (long)(getResources().getInteger(R.integer.location_update_fastest_interval_s)*1000);*/
 
         super.onCreate();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
-                .addApi(LocationServices.API)
+                //.addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
@@ -126,33 +104,49 @@ public class MainService extends Service implements RoomEventListenerInterface,
 
 
         //Listen Room Events
-        RoomEventDispatcher.addEventListener(this);
+        //RoomEventDispatcher.addEventListener(this);
     }
 
-    @Override
+    /*@Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
         if (action.equals(ACTION_START_GAME))
         {
             //TODO init game
-            startListeningLocationUpdates();
-            isListeningLocation = true;
+            if(mIsBound)
+            {
+                mMainService.startListeningLocationUpdates();
+            }else
+            {
+                bindMainServiceWithAction(MainService.ACTION_START_WATCHING_LOCATION);
+            }
+            //isListeningLocation = true;
+            //startListeningLocationUpdates();
         }else if(action.equals(ACTION_STOP_GAME))
         {
-            stopListeningLocationUpdates();
-        }else if(ACTION_TEST_ACTION.equals(action)) {
-            testAction0();
+            if(mIsBound)
+            {
+                mMainService.stopListeningLocationUpdates();
+            }else
+            {
+
+            }
+            //stopListeningLocationUpdates();
+        }else if(action.equals(ACTION_TEST_0))//test action 0
+        {
+            if(mIsBound)
+            {
+                mMainService.testAction0();
+            }else
+            {
+                bindMainServiceWithAction(MainService.ACTION_TEST_ACTION);
+            }
+            //testAction0();
         }
+        return super.onStartCommand(intent, flags, startId);
+    }*/
 
-        return Service.START_STICKY_COMPATIBILITY;
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    public void testAction0() {
+    private void testAction0() {
         PutDataMapRequest dataMap = PutDataMapRequest.create(PATH_GAME_DATA);
         dataMap.getDataMap().putLong("time", new Date().getTime());
         dataMap.getDataMap().putString(KEY_META, "{hoge:0,hage:9}");
@@ -161,8 +155,32 @@ public class MainService extends Service implements RoomEventListenerInterface,
                 .putDataItem(mGoogleApiClient, request);
     }
 
+    @Override
+    public void onMessageReceived(MessageEvent messageEvent) {
+        super.onMessageReceived(messageEvent);
+    }
 
-    public void startListeningLocationUpdates()
+    @Override
+    public void onDataChanged(DataEventBuffer dataEvents) {
+        final List<DataEvent> events = FreezableUtils.freezeIterable(dataEvents);
+        dataEvents.close();
+        for (DataEvent event : events) {
+            if (event.getType() == DataEvent.TYPE_CHANGED) {
+
+                String path = event.getDataItem().getUri().getPath();
+                log("aaaaaaaaaaa"+path);
+                //TODO: manage data change
+
+                DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
+                String a  = dataMapItem.getDataMap().getString(KEY_META);
+
+
+                log("cccc"+a);
+            }
+        }
+    }
+
+   /* private void startListeningLocationUpdates()
     {
         log("%%StartListening%%");
         if(mGoogleApiClient.isConnected())
@@ -176,20 +194,21 @@ public class MainService extends Service implements RoomEventListenerInterface,
             log("%%StartListening2222%%");
         }
 
-    }
+    }*/
 
-    public void stopListeningLocationUpdates()
+    /*private void stopListeningLocationUpdates()
     {
         if(mGoogleApiClient.isConnected())
         {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,this);
             isListeningLocation = false;
         }
-    }
+    }*/
 
 
 
     //room events listener
+/*
 
     @Override
     public void onConnect(Object obj) {
@@ -211,12 +230,13 @@ public class MainService extends Service implements RoomEventListenerInterface,
         Log.d(TAG, "@@onChangeUserProp");
     }
 
+
     @Override
     public void onReceiveMessage(String message) {
         Log.d(TAG, "@@onReceiveMessage");
     }
 
-
+*/
     private void sendMessage(String path, byte[] data) {
         Collection<String> nodes = getNodes();
         for (String node : nodes) {
@@ -245,19 +265,19 @@ public class MainService extends Service implements RoomEventListenerInterface,
         return results;
     }
 
-    @Override
+    /*@Override
     public void onLocationChanged(Location location) {
         log("location:" + location.toString());
-    }
+    }*/
 
 
     @Override
     public void onConnected(Bundle bundle) {
         log("%%google api client connected%%");
-        if(isListeningLocation)
+        /*if(isListeningLocation)
         {
             startListeningLocationUpdates();
-        }
+        }*/
     }
 
     @Override
@@ -269,4 +289,20 @@ public class MainService extends Service implements RoomEventListenerInterface,
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
+
+
+    /*private void bindMainServiceWithAction(String action) {
+        Intent bindServiceIntent = new Intent(GameListenerService.this,MainService.class);
+        bindServiceIntent.setAction(action);
+        bindService(bindServiceIntent, mConnection, Context.BIND_AUTO_CREATE);
+        mIsBound = true;
+    }
+
+    private void unnbindMainService() {
+        if (mIsBound) {
+            // コネクションの解除
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+    }*/
 }

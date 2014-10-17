@@ -46,6 +46,14 @@ public class MainActivity extends Activity {
         stopGame();
     }
 
+    public void onTestSyncButtonClicked(View view)
+    {
+        //dummy button 1
+        Intent i = new Intent(this, GameListenerService.class);
+        i.setAction(MainService.ACTION_TEST_ACTION);
+        this.startService(i);
+    }
+
     private void startGame()
     {
         Intent i = new Intent(this, MainService.class);
